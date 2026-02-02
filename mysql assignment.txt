@@ -1,0 +1,633 @@
+C:\Users\aaruagar>mysql -u root -p
+Enter password: ***********
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+C:\Users\aaruagar>mysql -u root -p
+Enter password: ************
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 142
+Server version: 9.5.0 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> CREATE DATABASE inventory_db;
+ERROR 1007 (HY000): Can't create database 'inventory_db'; database exists
+mysql> CREATE DATABASE inventory_dbs;
+Query OK, 1 row affected (0.197 sec)
+
+mysql> USE inventory_dbs;
+Database changed
+mysql> SELECT DATABASE();
++---------------+
+| DATABASE()    |
++---------------+
+| inventory_dbs |
++---------------+
+1 row in set (0.011 sec)
+
+mysql> CREATE TABLE categories (
+    ->     category_id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     category_name VARCHAR(50) NOT NULL UNIQUE,
+    ->     description TEXT
+    -> );
+Query OK, 0 rows affected (0.446 sec)
+
+mysql> CREATE TABLE suppliers (
+    ->     supplier_id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     supplier_name VARCHAR(100) NOT NULL,
+    ->     contact_email VARCHAR(100),
+    ->     phone VARCHAR(20)
+    -> );
+Query OK, 0 rows affected (0.615 sec)
+
+mysql> CREATE TABLE products (
+    ->     product_id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     product_name VARCHAR(100) NOT NULL,
+    ->     category_id INT,
+    ->     supplier_id INT,
+    ->     price DECIMAL(10,2) CHECK (price >= 0),
+    ->     stock_quantity INT CHECK (stock_quantity >= 0),
+    ->     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ->     FOREIGN KEY (category_id) REFERENCES categories(category_id),
+    ->     FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
+    -> );
+Query OK, 0 rows affected (0.497 sec)
+
+mysql> INSERT INTO categories (category_name, description) VALUES
+    -> ('Electronics', 'Devices and gadgets'),
+    -> ('Books', 'Printed and digital books'),
+    -> ('Clothing', 'Apparel and accessories');
+Query OK, 3 rows affected (0.128 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO suppliers (supplier_name, contact_email, phone) VALUES
+    -> ('Best Supplier Inc.', 'contact@bestsupplier.com', '123-456-7890'),
+    -> ('Global Goods', 'sales@globalgoods.com', '987-654-3210');
+Query OK, 2 rows affected (0.129 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO products (product_name, category_id, supplier_id, price, stock_quantity) VALUES
+    -> ('Smartphone Model X', 1, 1, 699.99, 50),
+    -> ('Wireless Headphones', 1, 2, 199.99, 30),
+    -> ('Mystery Novel', 2, 1, 14.99, 100),
+    -> ('T-shirt Classic', 3, 2, 9.99, 200),
+    -> ('E-reader', 1, 1, 129.99, 10);
+Query OK, 5 rows affected (0.123 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> SHOW TABLES;
++-------------------------+
+| Tables_in_inventory_dbs |
++-------------------------+
+| categories              |
+| products                |
+| suppliers               |
++-------------------------+
+3 rows in set (0.145 sec)
+
+mysql> SELECT * FROM products;
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+
+| product_id | product_name        | category_id | supplier_id | price  | stock_quantity | created_at          |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+
+|          1 | Smartphone Model X  |           1 |           1 | 699.99 |             50 | 2026-02-02 15:31:47 |
+|          2 | Wireless Headphones |           1 |           2 | 199.99 |             30 | 2026-02-02 15:31:47 |
+|          3 | Mystery Novel       |           2 |           1 |  14.99 |            100 | 2026-02-02 15:31:47 |
+|          4 | T-shirt Classic     |           3 |           2 |   9.99 |            200 | 2026-02-02 15:31:47 |
+|          5 | E-reader            |           1 |           1 | 129.99 |             10 | 2026-02-02 15:31:47 |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+
+5 rows in set (0.012 sec)
+
+mysql> SELECT p.product_name, c.category_name, s.supplier_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id;
++---------------------+---------------+--------------------+
+| product_name        | category_name | supplier_name      |
++---------------------+---------------+--------------------+
+| Smartphone Model X  | Electronics   | Best Supplier Inc. |
+| Mystery Novel       | Books         | Best Supplier Inc. |
+| E-reader            | Electronics   | Best Supplier Inc. |
+| Wireless Headphones | Electronics   | Global Goods       |
+| T-shirt Classic     | Clothing      | Global Goods       |
++---------------------+---------------+--------------------+
+5 rows in set (0.018 sec)
+
+mysql> ALTER TABLE products
+    -> ADD discount_percent INT DEFAULT 0;
+Query OK, 0 rows affected (0.303 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> UPDATE products
+    -> SET price = price * 0.85
+    -> WHERE category_id = (
+    ->     SELECT category_id
+    ->     FROM categories
+    ->     WHERE category_name = 'Electronics'
+    -> );
+Query OK, 3 rows affected, 3 warnings (0.084 sec)
+Rows matched: 3  Changed: 3  Warnings: 3
+
+mysql> SELECT p.product_name, c.category_name, s.supplier_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id;
++---------------------+---------------+--------------------+
+| product_name        | category_name | supplier_name      |
++---------------------+---------------+--------------------+
+| Smartphone Model X  | Electronics   | Best Supplier Inc. |
+| Wireless Headphones | Electronics   | Global Goods       |
+| E-reader            | Electronics   | Best Supplier Inc. |
+| Mystery Novel       | Books         | Best Supplier Inc. |
+| T-shirt Classic     | Clothing      | Global Goods       |
++---------------------+---------------+--------------------+
+5 rows in set (0.009 sec)
+
+mysql> SELECT *
+    -> FROM products
+    -> WHERE stock_quantity < 50;
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+------------------+
+| product_id | product_name        | category_id | supplier_id | price  | stock_quantity | created_at          | discount_percent |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+------------------+
+|          2 | Wireless Headphones |           1 |           2 | 169.99 |             30 | 2026-02-02 15:31:47 |                0 |
+|          5 | E-reader            |           1 |           1 | 110.49 |             10 | 2026-02-02 15:31:47 |                0 |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+------------------+
+2 rows in set (0.019 sec)
+
+mysql> ALTER TABLE products
+    -> ADD discount_percent INT DEFAULT 0;
+ERROR 1060 (42S21): Duplicate column name 'discount_percent'
+mysql> DESC products;
++------------------+---------------+------+-----+-------------------+-------------------+
+| Field            | Type          | Null | Key | Default           | Extra             |
++------------------+---------------+------+-----+-------------------+-------------------+
+| product_id       | int           | NO   | PRI | NULL              | auto_increment    |
+| product_name     | varchar(100)  | NO   |     | NULL              |                   |
+| category_id      | int           | YES  | MUL | NULL              |                   |
+| supplier_id      | int           | YES  | MUL | NULL              |                   |
+| price            | decimal(10,2) | YES  |     | NULL              |                   |
+| stock_quantity   | int           | YES  |     | NULL              |                   |
+| created_at       | timestamp     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| discount_percent | int           | YES  |     | 0                 |                   |
++------------------+---------------+------+-----+-------------------+-------------------+
+8 rows in set (0.099 sec)
+
+mysql> UPDATE products
+    -> SET price = price * 0.85
+    -> WHERE category_id = (
+    ->     SELECT category_id
+    ->     FROM categories
+    ->     WHERE category_name = 'Electronics'
+    -> );
+Query OK, 3 rows affected, 3 warnings (0.079 sec)
+Rows matched: 3  Changed: 3  Warnings: 3
+
+mysql> SELECT p.product_name, c.category_name
+    -> FROM products p
+    -> INNER JOIN categories c
+    -> ON p.category_id = c.category_id;
++---------------------+---------------+
+| product_name        | category_name |
++---------------------+---------------+
+| Mystery Novel       | Books         |
+| T-shirt Classic     | Clothing      |
+| Smartphone Model X  | Electronics   |
+| Wireless Headphones | Electronics   |
+| E-reader            | Electronics   |
++---------------------+---------------+
+5 rows in set (0.013 sec)
+
+mysql> SELECT p.product_name, c.category_name
+    -> FROM products p
+    -> LEFT JOIN categories c
+    -> ON p.category_id = c.category_id;
++---------------------+---------------+
+| product_name        | category_name |
++---------------------+---------------+
+| Smartphone Model X  | Electronics   |
+| Wireless Headphones | Electronics   |
+| Mystery Novel       | Books         |
+| T-shirt Classic     | Clothing      |
+| E-reader            | Electronics   |
++---------------------+---------------+
+5 rows in set (0.015 sec)
+
+mysql> SELECT p.product_name, s.supplier_name
+    -> FROM products p
+    -> LEFT JOIN suppliers s
+    -> ON p.supplier_id = s.supplier_id;
++---------------------+--------------------+
+| product_name        | supplier_name      |
++---------------------+--------------------+
+| Smartphone Model X  | Best Supplier Inc. |
+| Wireless Headphones | Global Goods       |
+| Mystery Novel       | Best Supplier Inc. |
+| T-shirt Classic     | Global Goods       |
+| E-reader            | Best Supplier Inc. |
++---------------------+--------------------+
+5 rows in set (0.011 sec)
+
+mysql> SELECT s.supplier_name, p.product_name
+    -> FROM products p
+    -> RIGHT JOIN suppliers s
+    -> ON p.supplier_id = s.supplier_id;
++--------------------+---------------------+
+| supplier_name      | product_name        |
++--------------------+---------------------+
+| Best Supplier Inc. | E-reader            |
+| Best Supplier Inc. | Mystery Novel       |
+| Best Supplier Inc. | Smartphone Model X  |
+| Global Goods       | T-shirt Classic     |
+| Global Goods       | Wireless Headphones |
++--------------------+---------------------+
+5 rows in set (0.010 sec)
+
+mysql> SELECT *
+    -> FROM products
+    -> WHERE supplier_id IS NULL;
+Empty set (0.012 sec)
+
+mysql> SELECT p.product_name, c.category_name, s.supplier_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id;
++---------------------+---------------+--------------------+
+| product_name        | category_name | supplier_name      |
++---------------------+---------------+--------------------+
+| Smartphone Model X  | Electronics   | Best Supplier Inc. |
+| Wireless Headphones | Electronics   | Global Goods       |
+| E-reader            | Electronics   | Best Supplier Inc. |
+| Mystery Novel       | Books         | Best Supplier Inc. |
+| T-shirt Classic     | Clothing      | Global Goods       |
++---------------------+---------------+--------------------+
+5 rows in set (0.015 sec)
+
+mysql> SELECT s.supplier_name, c.category_name
+    -> FROM suppliers s
+    -> LEFT JOIN categories c
+    -> ON s.supplier_id = c.category_id
+    ->
+    -> UNION
+    ->
+    -> SELECT s.supplier_name, c.category_name
+    -> FROM suppliers s
+    -> RIGHT JOIN categories c
+    -> ON s.supplier_id = c.category_id;
++--------------------+---------------+
+| supplier_name      | category_name |
++--------------------+---------------+
+| Best Supplier Inc. | Electronics   |
+| Global Goods       | Books         |
+| NULL               | Clothing      |
++--------------------+---------------+
+3 rows in set (0.033 sec)
+
+mysql> SELECT p.product_name, s.contact_email
+    -> FROM products p
+    -> JOIN suppliers s
+    -> ON p.supplier_id = s.supplier_id
+    -> WHERE s.contact_email IS NOT NULL;
++---------------------+--------------------------+
+| product_name        | contact_email            |
++---------------------+--------------------------+
+| Smartphone Model X  | contact@bestsupplier.com |
+| Mystery Novel       | contact@bestsupplier.com |
+| E-reader            | contact@bestsupplier.com |
+| Wireless Headphones | sales@globalgoods.com    |
+| T-shirt Classic     | sales@globalgoods.com    |
++---------------------+--------------------------+
+5 rows in set (0.017 sec)
+
+mysql> SELECT DISTINCT c.category_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id
+    -> WHERE s.supplier_name = 'Global Goods';
++---------------+
+| category_name |
++---------------+
+| Electronics   |
+| Clothing      |
++---------------+
+2 rows in set (0.014 sec)C:\Users\aaruagar>mysql -u root -p
+Enter password: ***********
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+C:\Users\aaruagar>mysql -u root -p
+Enter password: ************
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 142
+Server version: 9.5.0 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> CREATE DATABASE inventory_db;
+ERROR 1007 (HY000): Can't create database 'inventory_db'; database exists
+mysql> CREATE DATABASE inventory_dbs;
+Query OK, 1 row affected (0.197 sec)
+
+mysql> USE inventory_dbs;
+Database changed
+mysql> SELECT DATABASE();
++---------------+
+| DATABASE()    |
++---------------+
+| inventory_dbs |
++---------------+
+1 row in set (0.011 sec)
+
+mysql> CREATE TABLE categories (
+    ->     category_id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     category_name VARCHAR(50) NOT NULL UNIQUE,
+    ->     description TEXT
+    -> );
+Query OK, 0 rows affected (0.446 sec)
+
+mysql> CREATE TABLE suppliers (
+    ->     supplier_id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     supplier_name VARCHAR(100) NOT NULL,
+    ->     contact_email VARCHAR(100),
+    ->     phone VARCHAR(20)
+    -> );
+Query OK, 0 rows affected (0.615 sec)
+
+mysql> CREATE TABLE products (
+    ->     product_id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     product_name VARCHAR(100) NOT NULL,
+    ->     category_id INT,
+    ->     supplier_id INT,
+    ->     price DECIMAL(10,2) CHECK (price >= 0),
+    ->     stock_quantity INT CHECK (stock_quantity >= 0),
+    ->     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ->     FOREIGN KEY (category_id) REFERENCES categories(category_id),
+    ->     FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
+    -> );
+Query OK, 0 rows affected (0.497 sec)
+
+mysql> INSERT INTO categories (category_name, description) VALUES
+    -> ('Electronics', 'Devices and gadgets'),
+    -> ('Books', 'Printed and digital books'),
+    -> ('Clothing', 'Apparel and accessories');
+Query OK, 3 rows affected (0.128 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO suppliers (supplier_name, contact_email, phone) VALUES
+    -> ('Best Supplier Inc.', 'contact@bestsupplier.com', '123-456-7890'),
+    -> ('Global Goods', 'sales@globalgoods.com', '987-654-3210');
+Query OK, 2 rows affected (0.129 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO products (product_name, category_id, supplier_id, price, stock_quantity) VALUES
+    -> ('Smartphone Model X', 1, 1, 699.99, 50),
+    -> ('Wireless Headphones', 1, 2, 199.99, 30),
+    -> ('Mystery Novel', 2, 1, 14.99, 100),
+    -> ('T-shirt Classic', 3, 2, 9.99, 200),
+    -> ('E-reader', 1, 1, 129.99, 10);
+Query OK, 5 rows affected (0.123 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> SHOW TABLES;
++-------------------------+
+| Tables_in_inventory_dbs |
++-------------------------+
+| categories              |
+| products                |
+| suppliers               |
++-------------------------+
+3 rows in set (0.145 sec)
+
+mysql> SELECT * FROM products;
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+
+| product_id | product_name        | category_id | supplier_id | price  | stock_quantity | created_at          |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+
+|          1 | Smartphone Model X  |           1 |           1 | 699.99 |             50 | 2026-02-02 15:31:47 |
+|          2 | Wireless Headphones |           1 |           2 | 199.99 |             30 | 2026-02-02 15:31:47 |
+|          3 | Mystery Novel       |           2 |           1 |  14.99 |            100 | 2026-02-02 15:31:47 |
+|          4 | T-shirt Classic     |           3 |           2 |   9.99 |            200 | 2026-02-02 15:31:47 |
+|          5 | E-reader            |           1 |           1 | 129.99 |             10 | 2026-02-02 15:31:47 |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+
+5 rows in set (0.012 sec)
+
+mysql> SELECT p.product_name, c.category_name, s.supplier_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id;
++---------------------+---------------+--------------------+
+| product_name        | category_name | supplier_name      |
++---------------------+---------------+--------------------+
+| Smartphone Model X  | Electronics   | Best Supplier Inc. |
+| Mystery Novel       | Books         | Best Supplier Inc. |
+| E-reader            | Electronics   | Best Supplier Inc. |
+| Wireless Headphones | Electronics   | Global Goods       |
+| T-shirt Classic     | Clothing      | Global Goods       |
++---------------------+---------------+--------------------+
+5 rows in set (0.018 sec)
+
+mysql> ALTER TABLE products
+    -> ADD discount_percent INT DEFAULT 0;
+Query OK, 0 rows affected (0.303 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> UPDATE products
+    -> SET price = price * 0.85
+    -> WHERE category_id = (
+    ->     SELECT category_id
+    ->     FROM categories
+    ->     WHERE category_name = 'Electronics'
+    -> );
+Query OK, 3 rows affected, 3 warnings (0.084 sec)
+Rows matched: 3  Changed: 3  Warnings: 3
+
+mysql> SELECT p.product_name, c.category_name, s.supplier_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id;
++---------------------+---------------+--------------------+
+| product_name        | category_name | supplier_name      |
++---------------------+---------------+--------------------+
+| Smartphone Model X  | Electronics   | Best Supplier Inc. |
+| Wireless Headphones | Electronics   | Global Goods       |
+| E-reader            | Electronics   | Best Supplier Inc. |
+| Mystery Novel       | Books         | Best Supplier Inc. |
+| T-shirt Classic     | Clothing      | Global Goods       |
++---------------------+---------------+--------------------+
+5 rows in set (0.009 sec)
+
+mysql> SELECT *
+    -> FROM products
+    -> WHERE stock_quantity < 50;
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+------------------+
+| product_id | product_name        | category_id | supplier_id | price  | stock_quantity | created_at          | discount_percent |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+------------------+
+|          2 | Wireless Headphones |           1 |           2 | 169.99 |             30 | 2026-02-02 15:31:47 |                0 |
+|          5 | E-reader            |           1 |           1 | 110.49 |             10 | 2026-02-02 15:31:47 |                0 |
++------------+---------------------+-------------+-------------+--------+----------------+---------------------+------------------+
+2 rows in set (0.019 sec)
+
+mysql> ALTER TABLE products
+    -> ADD discount_percent INT DEFAULT 0;
+ERROR 1060 (42S21): Duplicate column name 'discount_percent'
+mysql> DESC products;
++------------------+---------------+------+-----+-------------------+-------------------+
+| Field            | Type          | Null | Key | Default           | Extra             |
++------------------+---------------+------+-----+-------------------+-------------------+
+| product_id       | int           | NO   | PRI | NULL              | auto_increment    |
+| product_name     | varchar(100)  | NO   |     | NULL              |                   |
+| category_id      | int           | YES  | MUL | NULL              |                   |
+| supplier_id      | int           | YES  | MUL | NULL              |                   |
+| price            | decimal(10,2) | YES  |     | NULL              |                   |
+| stock_quantity   | int           | YES  |     | NULL              |                   |
+| created_at       | timestamp     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| discount_percent | int           | YES  |     | 0                 |                   |
++------------------+---------------+------+-----+-------------------+-------------------+
+8 rows in set (0.099 sec)
+
+mysql> UPDATE products
+    -> SET price = price * 0.85
+    -> WHERE category_id = (
+    ->     SELECT category_id
+    ->     FROM categories
+    ->     WHERE category_name = 'Electronics'
+    -> );
+Query OK, 3 rows affected, 3 warnings (0.079 sec)
+Rows matched: 3  Changed: 3  Warnings: 3
+
+mysql> SELECT p.product_name, c.category_name
+    -> FROM products p
+    -> INNER JOIN categories c
+    -> ON p.category_id = c.category_id;
++---------------------+---------------+
+| product_name        | category_name |
++---------------------+---------------+
+| Mystery Novel       | Books         |
+| T-shirt Classic     | Clothing      |
+| Smartphone Model X  | Electronics   |
+| Wireless Headphones | Electronics   |
+| E-reader            | Electronics   |
++---------------------+---------------+
+5 rows in set (0.013 sec)
+
+mysql> SELECT p.product_name, c.category_name
+    -> FROM products p
+    -> LEFT JOIN categories c
+    -> ON p.category_id = c.category_id;
++---------------------+---------------+
+| product_name        | category_name |
++---------------------+---------------+
+| Smartphone Model X  | Electronics   |
+| Wireless Headphones | Electronics   |
+| Mystery Novel       | Books         |
+| T-shirt Classic     | Clothing      |
+| E-reader            | Electronics   |
++---------------------+---------------+
+5 rows in set (0.015 sec)
+
+mysql> SELECT p.product_name, s.supplier_name
+    -> FROM products p
+    -> LEFT JOIN suppliers s
+    -> ON p.supplier_id = s.supplier_id;
++---------------------+--------------------+
+| product_name        | supplier_name      |
++---------------------+--------------------+
+| Smartphone Model X  | Best Supplier Inc. |
+| Wireless Headphones | Global Goods       |
+| Mystery Novel       | Best Supplier Inc. |
+| T-shirt Classic     | Global Goods       |
+| E-reader            | Best Supplier Inc. |
++---------------------+--------------------+
+5 rows in set (0.011 sec)
+
+mysql> SELECT s.supplier_name, p.product_name
+    -> FROM products p
+    -> RIGHT JOIN suppliers s
+    -> ON p.supplier_id = s.supplier_id;
++--------------------+---------------------+
+| supplier_name      | product_name        |
++--------------------+---------------------+
+| Best Supplier Inc. | E-reader            |
+| Best Supplier Inc. | Mystery Novel       |
+| Best Supplier Inc. | Smartphone Model X  |
+| Global Goods       | T-shirt Classic     |
+| Global Goods       | Wireless Headphones |
++--------------------+---------------------+
+5 rows in set (0.010 sec)
+
+mysql> SELECT *
+    -> FROM products
+    -> WHERE supplier_id IS NULL;
+Empty set (0.012 sec)
+
+mysql> SELECT p.product_name, c.category_name, s.supplier_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id;
++---------------------+---------------+--------------------+
+| product_name        | category_name | supplier_name      |
++---------------------+---------------+--------------------+
+| Smartphone Model X  | Electronics   | Best Supplier Inc. |
+| Wireless Headphones | Electronics   | Global Goods       |
+| E-reader            | Electronics   | Best Supplier Inc. |
+| Mystery Novel       | Books         | Best Supplier Inc. |
+| T-shirt Classic     | Clothing      | Global Goods       |
++---------------------+---------------+--------------------+
+5 rows in set (0.015 sec)
+
+mysql> SELECT s.supplier_name, c.category_name
+    -> FROM suppliers s
+    -> LEFT JOIN categories c
+    -> ON s.supplier_id = c.category_id
+    ->
+    -> UNION
+    ->
+    -> SELECT s.supplier_name, c.category_name
+    -> FROM suppliers s
+    -> RIGHT JOIN categories c
+    -> ON s.supplier_id = c.category_id;
++--------------------+---------------+
+| supplier_name      | category_name |
++--------------------+---------------+
+| Best Supplier Inc. | Electronics   |
+| Global Goods       | Books         |
+| NULL               | Clothing      |
++--------------------+---------------+
+3 rows in set (0.033 sec)
+
+mysql> SELECT p.product_name, s.contact_email
+    -> FROM products p
+    -> JOIN suppliers s
+    -> ON p.supplier_id = s.supplier_id
+    -> WHERE s.contact_email IS NOT NULL;
++---------------------+--------------------------+
+| product_name        | contact_email            |
++---------------------+--------------------------+
+| Smartphone Model X  | contact@bestsupplier.com |
+| Mystery Novel       | contact@bestsupplier.com |
+| E-reader            | contact@bestsupplier.com |
+| Wireless Headphones | sales@globalgoods.com    |
+| T-shirt Classic     | sales@globalgoods.com    |
++---------------------+--------------------------+
+5 rows in set (0.017 sec)
+
+mysql> SELECT DISTINCT c.category_name
+    -> FROM products p
+    -> JOIN categories c ON p.category_id = c.category_id
+    -> JOIN suppliers s ON p.supplier_id = s.supplier_id
+    -> WHERE s.supplier_name = 'Global Goods';
++---------------+
+| category_name |
++---------------+
+| Electronics   |
+| Clothing      |
++---------------+
+2 rows in set (0.014 sec)
