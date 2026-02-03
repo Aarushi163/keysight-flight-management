@@ -1,0 +1,88 @@
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4>✈ Flight Management System</h4>
+    </div>
+
+    <div class="card-body">
+
+        <!-- FORM -->
+        <form class="row g-3 mb-4">
+            <div class="col-md-2">
+                <input class="form-control" placeholder="Flight No" ng-model="$ctrl.newFlight.flightNumber">
+            </div>
+            <div class="col-md-2">
+                <input class="form-control" placeholder="Airline" ng-model="$ctrl.newFlight.airline">
+            </div>
+            <div class="col-md-2">
+                <input class="form-control" placeholder="Source" ng-model="$ctrl.newFlight.source">
+            </div>
+            <div class="col-md-2">
+                <input class="form-control" placeholder="Destination" ng-model="$ctrl.newFlight.destination">
+            </div>
+            <div class="col-md-2">
+                <input type="datetime-local" class="form-control" ng-model="$ctrl.newFlight.departureTime">
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" placeholder="Price" ng-model="$ctrl.newFlight.ticketPrice">
+            </div>
+
+            <div class="col-md-3">
+                <select class="form-select" ng-model="$ctrl.newFlight.status">
+                    <option>On Time</option>
+                    <option>Delayed</option>
+                    <option>Cancelled</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <button class="btn btn-success w-100"
+                        ng-click="$ctrl.newFlight.id ? $ctrl.updateFlight() : $ctrl.addFlight()">
+                    {{$ctrl.newFlight.id ? 'Update Flight' : 'Add Flight'}}
+                </button>
+            </div>
+        </form>
+
+        <!-- SEARCH -->
+        <input class="form-control mb-3"
+               placeholder="Filter by Source or Destination"
+               ng-model="$ctrl.searchText">
+
+        <!-- TABLE -->
+        <table class="table table-bordered table-hover text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Flight</th>
+                    <th>Airline</th>
+                    <th>Source</th>
+                    <th>Destination</th>
+                    <th ng-click="$ctrl.sortBy('departureTime')">Departure</th>
+                    <th ng-click="$ctrl.sortBy('ticketPrice')">Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr ng-repeat="f in $ctrl.flights
+                    | filter:$ctrl.searchText
+                    | orderBy:$ctrl.sortKey:$ctrl.reverse">
+
+                    <td>{{f.id}}</td>
+                    <td>{{f.flightNumber}}</td>
+                    <td>{{f.airline | uppercase}}</td>
+                    <td>{{f.source}}</td>
+                    <td>{{f.destination}}</td>
+                    <td>{{f.departureTime | date:'medium'}}</td>
+                    <td>{{f.ticketPrice | currency}}</td>
+                    <td>{{f.status}}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" ng-click="$ctrl.editFlight(f)">Edit</button>
+                        <button class="btn btn-danger btn-sm" ng-click="$ctrl.deleteFlight(f.id)">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>

@@ -1,0 +1,44 @@
+{
+  "flights": [
+    {
+      "id": "1",
+      "flightNumber": "AI101",
+      "airline": "Air India",
+      "source": "Delhi",
+      "destination": "Mumbai",
+      "departureTime": "2026-01-22T10:30:00",
+      "ticketPrice": 5500,
+      "status": "On Time"
+    },
+    {
+      "id": "2",
+      "flightNumber": "EK202",
+      "airline": "Emirates",
+      "source": "Dubai",
+      "destination": "London",
+      "departureTime": "2026-01-23T14:45:00",
+      "ticketPrice": 42000,
+      "status": "Delayed"
+    },
+    {
+      "id": "3",
+      "flightNumber": "QF303",
+      "airline": "Qantas",
+      "source": "Sydney",
+      "destination": "Melbourne",
+      "departureTime": "2026-01-24T09:00:00",
+      "ticketPrice": 12000,
+      "status": "Cancelled"
+    },
+    {
+      "id": "24f7",
+      "flightNumber": "234",
+      "airline": "skyline",
+      "source": "delhi",
+      "destination": "patiala",
+      "departureTime": "2026-01-20T11:57:00.000Z",
+      "ticketPrice": 33000,
+      "status": "Delayed"
+    }
+  ]
+}
